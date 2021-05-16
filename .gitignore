@@ -1,2 +1,4 @@
 /carts/demos/*
 .DS_Store
+*.bak
+picosync.json
