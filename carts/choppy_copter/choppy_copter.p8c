@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project version="1">
+  <game>
+    <name>Choppy Copter</name>
+    <author>Brian Sweet</author>
+    <cart>C:\Users\Sweet\Documents\Repos\PICO-8-Playground\carts\choppy_copter\choppy_copter.p8</cart>
+  </game>
+  <entities>
+    <entity name="Notes" enabled="0">
+      <function name="ideas" enabled="0">ideas
+
+  1. 
+  2. </function>
+      <function name="todo" enabled="0">todo
+
+  1. 
+  2. </function>
+    </entity>
+    <entity name="Game" enabled="1">
+      <function name="globals" enabled="1">plr={
+  spd=1,
+  x=63,
+  y=63
+}
+pipes={
+  {x=129,y=0,w=20,h=40},
+  {x=129,y=107,w=20,h=40}
+}
+gvy=0.3
+jmp_spd=-4.5</function>
+      <function name="_init" enabled="1">function _init()
+end</function>
+      <function name="_update" enabled="1">function _update()
+  plr.spd+=gvy
+  plr.y+=plr.spd
+  
+  foreach(pipes, function(v) v.x-=1 if v.x + v.w+1 &lt; 0 then v.x=129 end end)
+  
+  if btnp(4) then
+    plr.spd=jmp_spd
+  end
+end</function>
+      <function name="_draw" enabled="1">function _draw()
+  cls()
+  foreach(pipes, function(v) rect(v.x, v.y, v.x+20, v.y+40, 3) end)
+  color(7)
+  circ(plr.x, plr.y, 7)
+end</function>
+    </entity>
+  </entities>
+</project>
