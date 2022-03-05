@@ -15,15 +15,20 @@ local lbs={}
 local obs={}
 
 --center points
-local cps={
-  {x=65,y=62},-- +/+
-  {x=65,y=65},-- +/-
-  {x=62,y=65},-- -/-
-  {x=62,y=62},-- -/+
+local cps = {
+  {x=62,y=59},--n
+  {x=65,y=59},--ne
+  {x=68,y=62},--e
+  {x=68,y=65},--se
+  {x=65,y=68},--s
+  {x=62,y=68},--sw
+  {x=59,y=65},--nw
+  {x=59,y=62},--w
 }
 
 --end points
 local eps={
+  {x=37,y=0},--nw/n
   {x=90,y=0},--n/ne
   {x=127,y=37},--ne/e
   {x=127,y=90},--e/se
@@ -31,7 +36,6 @@ local eps={
   {x=37,y=127},--s/sw
   {x=0,y=90},--sw/w
   {x=0,y=37},--w/nw
-  {x=37,y=0},--nw/n
 }
 
 --lanes
@@ -48,14 +52,10 @@ local lns={
 
 function _init()
   gen_plr()
-  for i=1, 4, 1 do
+  for i=1, 8, 1 do
     lbs[#lbs+1] = {
-      s={x=cps[i].x,y=cps[i].y,},
-      e={x=eps[i+(i-1)].x,y=eps[i+(i-1)].y}
-    }
-    lbs[#lbs+1] = {
-      s={x=cps[i].x,y=cps[i].y,},
-      e={x=eps[i*2].x,y=eps[i*2].y}
+      s=cps[i],
+      e=eps[i]
     }
   end
 end
@@ -72,8 +72,21 @@ end
 function _draw()
   cls(0)
   plr.draw()
+  
+  --draw lane borders
+  foreach(lbs,
+    function(lb)
+      line(lb.s.x,lb.s.y,lb.e.x,lb.e.y,5)
+    end)
+
+  --draw center
+  render_empty_poly(cps,7)
+  
+  --draw outer border
+  render_empty_poly(eps,7)
+
+  -- draw obstacles
   foreach(obs, function(ob) ob:draw() end)
-  draw_bg(7)
 end
 
 -- shape draw algoriths
@@ -154,25 +167,30 @@ function render_poly(v,col)
  end 
 end
 
+local dist=50
+local offset=63
 function gen_plr()
-  plr={x=0,r=0.75,col=12,v={0,0,0,0},}
+  plr={x=0,r=0.75,col=12,v={0,0,0,0}}
   
   plr.draw=function()
-    sspr(plr.x,0,8,8,63+cos(plr.r)*50,63+sin(plr.r)*50)
+    circfill(offset+cos(plr.r)*dist,offset+sin(plr.r)*dist,2,7)
   end
 
   plr.update=function()
-    if btnp(0) then
-      plr.x+=8
-      if plr.x>=64 then plr.x=0 end
-      plr.r-=45/360
+    if btn(0) then
+      plr.r=clamp_r(-0.01)
     end
-    if btnp(1) then
-      plr.x-=8
-      if plr.x<=-8 then plr.x=56 end
-      plr.r+=45/360
+    if btn(1) then
+      plr.r=clamp_r(0.01)
     end
   end
+end
+
+function clamp_r(a)
+  local nr=plr.r+a
+  nr = nr>1 and 0 or (nr<0 and 1 or nr)
+  plr.x=1%nr
+  return nr
 end
 
 --generate new obstacle
@@ -210,33 +228,14 @@ function point_on_line(s,e,p)
   return {x=s.x*(1-p)+e.x*p,y=s.y*(1-p)+e.y*p}
 end
 
-function draw_bg(col)
-  --draw center
-  line(62,59,65,59,col)--n
-  line(65,59,68,62,col)--ne
-  line(68,62,68,65,col)--e
-  line(68,65,65,68,col)--se
-  line(62,68,65,68,col)--s
-  line(62,68,59,65,col)--sw
-  line(59,62,59,65,col)--w
-  line(59,62,62,59,col)--nw
-
-  --draw lane borders
-  foreach(lbs,
-    function(lb)
-      line(lb.s.x,lb.s.y,lb.e.x,lb.e.y,col)
-    end
-  )
-
-  --draw outer border
-  line(37,0,90,0,col)--n
-  line(90,0,127,37,col)--ne
-  line(127,37,127,90,col)--e
-  line(127,90,90,127,col)--se
-  line(90,127,37,127,col)--s
-  line(37,127,0,90,col)--sw
-  line(0,90,0,37,col)--w
-  line(0,37,37,0,col)--nw
+-- v is an array of vertices
+-- [{x1,y1},{x2,y2},...] etc
+function render_empty_poly(v,col)
+  local e = nil
+  for i=1,#v,1 do
+    e = i+1>#v and 1 or i+1
+    line(v[i].x, v[i].y, v[e].x, v[e].y, col)
+  end
 end
 
 __gfx__
